@@ -1,0 +1,50 @@
+service: people-registration
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.10
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "dynamodb:BatchGetItem"
+            - "dynamodb:GetItem"
+            - "dynamodb:Query"
+            - "dynamodb:Scan"
+            - "dynamodb:BatchWriteItem"
+            - "dynamodb:PutItem"
+            - "dynamodb:UpdateItem"
+          Resource: "arn:aws:dynamodb:*:*:table/people"
+
+functions:
+  put_person:
+    handler: handler.put_person
+    events:
+      - httpApi:
+          method: PUT
+          path: /people/{email}
+  get_person:
+    handler: handler.get_person
+    events:
+      - httpApi:
+          method: GET
+          path: /people/{email}
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: people
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
